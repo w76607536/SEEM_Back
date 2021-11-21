@@ -6,13 +6,13 @@ import uuid
 
 
 class Place(models.Model):
-    id = models.UUIDField(primary_key=True,default=uuid.uuid4, null=False, verbose_name=u'location uuid',help_text="location uuid")
-    name = models.CharField(max_length=20, verbose_name='location name')
-    place_id = models.CharField(max_length=50, verbose_name='GoogleMap place ID')
-    lat = models.DecimalField(max_digits=15, decimal_places=10, verbose_name='GoogleMap place lat')
-    lng = models.DecimalField(max_digits=15, decimal_places=10, verbose_name='GoogleMap place lng')
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4, null=False)
+    name = models.CharField(max_length=20)
+    place_id = models.CharField(max_length=50)
+    lat = models.DecimalField(max_digits=15, decimal_places=10)
+    lng = models.DecimalField(max_digits=15, decimal_places=10)
     score = models.IntegerField(verbose_name='score',default=5)
-    is_startPlace = models.BooleanField(default=False, verbose_name='start location')
+    is_startPlace = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'Place_info'  # 指明数据库表名

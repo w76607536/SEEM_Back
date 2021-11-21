@@ -29,7 +29,7 @@ def initPath(if_all_init=False):
                     path.save()
                     logger.info('添加path！ startPlace:{}；endPlace:{}；distance{};duration{}'.format(startPlace.name, endPlace.name,path.duration,path.distance))
 
-def make_solution_normal(startPlace,maxDuration):
+def _make_solution_normal(startPlace,maxDuration):
     solutionList =[]
     pathList = Path.objects.all()
 
@@ -45,11 +45,14 @@ def make_solution_normal(startPlace,maxDuration):
         'score':0,
         'pathList':[],
     }
-    placeList = Place.objects.filter(~Q(id= startPlace.id))
-    next_place(list(placeList),solutionList,durationDict,solutionDict,startPlace,maxDuration)
+    placeList_ = Place.objects.filter(~Q(id= startPlace.id))
+    placeList = []
+    for place in placeList_:
+        placeList.append([place,True])
+    _next_place(list(placeList),solutionList,durationDict,solutionDict,startPlace,maxDuration)
     return solutionList
 
-def next_place(placeList,solutionList,durationDict, solutionDict, lastPlace, maxDuration ):
+def _next_place(placeList,solutionList,durationDict, solutionDict, lastPlace, maxDuration ):
     #_placeList = copy.deepcopy(placeList)
     _solutionDict = copy.deepcopy(solutionDict)
     i = 0
@@ -57,32 +60,44 @@ def next_place(placeList,solutionList,durationDict, solutionDict, lastPlace, max
         if i >= len(placeList) or len(placeList) == 0:
             break
         #print(i,len(placeList))
-        place = placeList[i]
-        dictStr = lastPlace.name + '--' + place.name
-        duration = durationDict[dictStr]
-        _solutionDict['duration'] += duration
-        _solutionDict['score'] += place.score
-        pathDict = {
-            'pointPlace' : place,
-            'path' :dictStr
-        }
-        _solutionDict['pathList'].append(pathDict)
-        _solutionDict['endPlace'] = place
-        if _solutionDict['duration'] >= maxDuration:
-            solutionList.append(solutionDict)
+        place = placeList[i][0]
+        is_used = placeList[i][1]
+        if not is_used:
+            i = i + 1
         else:
-            _placeList = None
+            dictStr = lastPlace.name + '--' + place.name
+            duration = durationDict[dictStr]
+            _solutionDict['duration'] += duration
+            _solutionDict['score'] += place.score
+            pathDict = {
+                'pointPlace' : place,
+                'path' :dictStr
+            }
+            _solutionDict['pathList'].append(pathDict)
+            _solutionDict['endPlace'] = place
             _placeList = copy.deepcopy(placeList)
-            del _placeList[i]
-            if _placeList == []:
-                solutionList.append(_solutionDict)
+            _placeList[i][1] = False
+            if _solutionDict['duration'] >= maxDuration:
+                solutionList.append(solutionDict)
             else:
-                next_place(_placeList,solutionList,durationDict, _solutionDict, place, maxDuration)
-        i = i + 1
+                is_all_used = False
+                for _place,is_used in _placeList:
+                    if is_used:
+                        is_all_used = True
+                if not is_all_used:
+                    solutionList.append(_solutionDict)
+                else:
+                    print(lastPlace.name, place.name, placeList[i][0].name,_placeList[i][1])
+                    _place = copy.deepcopy(place)
+                    a = _next_place(_placeList,solutionList,durationDict, solutionDict, place, maxDuration)
+                    #_solutionDict = None
+            i = i + 1
 
-def real_time_Solution(solutionList):
+    return 0
+
+def _real_time_Solution(solutionList):
     solutionResultList =[]
-    for solution in solutionList:
+    for solution in solutionList[0:10]:
         solutionResultDict = {
             'startPlace':{
                 'name': solution['startPlace'].name,
@@ -118,12 +133,16 @@ def real_time_Solution(solutionList):
 
     return solutionResultList
 
+def solution_list_normal(startPlace,duration):
+    solutionList = _make_solution_normal(startPlace, int(duration*60))
+    realSolutionList = _real_time_Solution(solutionList)
+    return realSolutionList
 
 
-def main():
+def _test():
     startPlace = Place.objects.get(name="香港中文大学")
-    solutionList = make_solution_normal(startPlace,480)
-    realSolutionList = real_time_Solution(solutionList)
+    solutionList = _make_solution_normal(startPlace,480)
+    realSolutionList = _real_time_Solution(solutionList)
     print(realSolutionList,len(realSolutionList))
 
 

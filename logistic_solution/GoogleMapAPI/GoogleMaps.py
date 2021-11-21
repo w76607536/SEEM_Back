@@ -85,7 +85,7 @@ class GoogleMaps(object):
             step_dict = {
                 'start_location':step.get('start_location'),
                 'end_location': step.get('end_location'),
-                'polyline':step.get('polyline')
+                #'polyline':step.get('polyline')
             }
             route_info.get('steps').append(step_dict)
         return route_info
